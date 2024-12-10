@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Response
 from sqlmodel import Session, select
-from src.models import Task
+from src.models import Task, CreateTaskRequest
 from src.database import getEngine
 #Aqui definiremos a nossas rotas para executar os comandos
 
@@ -17,51 +17,63 @@ def tasksList():
     return tasks
     
 # Rota para listar uma Task pelo ID indicado
-@router.get('/task_ID', status_code= status.HTTP_200_OK)
-def taskListById(taskId : int, task: Task):
+@router.get('/taskID', status_code= status.HTTP_200_OK)
+def taskListById(taskID : int):
     session = Session(getEngine())
     
     sttm = select(Task)
-
-    if not session.exec(sttm.where(Task.id == taskId)):
+    if not session.exec(sttm.where(Task.id == taskID)):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'Task não encontrada com id = {taskId}'
+            detail=f'Task não encontrada com id = {taskID}'
         )
     else:
-        task = session.exec(sttm.where(Task.id == taskId)).first()
+        task = session.exec(sttm.where(Task.id == taskID)).first()
         return task
 
 # Rota para adicionar uma nova Task
 @router.post('', status_code= status.HTTP_201_CREATED)
-def taskAdd(task: Task):
-
-    task = Task(
-        title = task.title,
-        description = task.description,
-        dueDate = task.dueDate
-    )
+def taskAdd(task : CreateTaskRequest):
+    validTask = Task.model_validate(task)
     session = Session(getEngine())
+    session.add(validTask)
+    session.commit()
+    session.refresh(validTask)
+    return validTask
+
+# Rota para deletar um livro pelo ID
+@router.delete('/{taskID}',status_code=status.HTTP_200_OK)
+def taskDelete(taskID : int):
+    session = Session(getEngine())
+    
+    sttm = select(Task).where(Task.id == taskID)
+    task = session.exec(sttm).first()
+    
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f'Task não encontrada com id = {taskID}'
+        )
+    
+    session.delete(task)
+    session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+# Rota para atualizar um livro pelo ID
+@router.put('{taskID}', status_code= status.HTTP_200_OK)
+def taskMarkDone(taskID : int):
+    session = Session(getEngine())
+
+    sttm = select(Task).where(Task.id == taskID)
+    task = session.exec(sttm).first()
+
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f'Task não encontrada com id = {taskID}'
+        )
+    task.done = True
     session.add(task)
     session.commit()
     session.refresh(task)
-
-    return 'Task adicionada com sucesso!'
-
-# Rota para deletar um livro pelo ID
-@router.delete('',status_code=status.HTTP_200_OK)
-def taskDelete(taskId : int):
-    session = Session(getEngine())
-    
-    sttm = select(Task)
-    
-    if not session.exec(sttm.where(Task.id == taskId)):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'Task não encontrada com id = {taskId}'
-        )
-    
-    else:
-        session.delete(Task)
-        session.commit()
-        return 'Task deletada com sucesso!'
+    return task
