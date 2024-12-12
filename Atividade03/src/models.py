@@ -15,20 +15,12 @@ class BaseTask(SQLModel):
 # Crinado a classe Task que herdara a base e irá se torna uma tabela
 class Task(BaseTask, table = True):
     id: int = Field(default=None, primary_key = True)
+    owner : int = Field(default=None, foreign_key= 'user.id')
 
 # Criando uma classe para fazer o requerimento de criação de uma Task
 class CreateTaskRequest(BaseTask):
     pass
 
-# Criando o modelo de Classe dos Usuários
-class User(SQLModel, table = True):
-    id: int | None = Field(default=None,primary_key = True)
-    name: str
-    email: str
-    username: str
-    password: str
-
-# Agora criando as classes para os Usuários
 
 # Criando a classe Básica do usuário
 class BaseUser(SQLModel):

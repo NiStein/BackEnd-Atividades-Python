@@ -7,10 +7,10 @@ from .database import initDB
 app = FastAPI()
 
 #Inclui o router de tasksController de tarefas na rota raiz
-app.include_router(tasksRouter, prefix='/tasks')
+app.include_router(tasksRouter, prefix='/task')
 
 #Inclui o router de userController de usuários na rota raiz
-app.include_router(userRouter, prefix='/users')
+app.include_router(userRouter, prefix='/user')
 
 #Inicializa o banco de dados
 initDB()
