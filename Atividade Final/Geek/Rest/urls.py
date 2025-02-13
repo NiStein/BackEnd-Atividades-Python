@@ -1,4 +1,4 @@
-from django.urls import path, include, re_path
+from django.urls import path, include
 from Rest.views import CategoriaListCreateView, TituloListCreateView, ProdutoListCreateView
 from Rest.views import ProdutoUpdateEstoqueView, ProdutoDetailDeleteUpView, VendasListCreateView
 from rest_framework.routers import DefaultRouter
